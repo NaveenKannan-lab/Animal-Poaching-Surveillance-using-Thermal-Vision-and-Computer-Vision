@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animal Poaching Detection System</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <i class="fas fa-shield-alt"></i>
+      <span>PoachGuard</span>
+    </div>
+    
+    <nav class="nav-menu">
+      <a href="#" class="nav-item active" onclick="showPage('live')">
+        <i class="fas fa-video"></i>
+        <span>Live Detection</span>
+      </a>
+      <a href="#" class="nav-item" onclick="showPage('history')">
+        <i class="fas fa-history"></i>
+        <span>Detection History</span>
+      </a>
+      <a href="#" class="nav-item" onclick="showPage('settings')">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="status-indicator">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Idle</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    
+    <!-- Header -->
+    <header class="header">
+      <h1><i class="fas fa-satellite-dish"></i> Animal Poaching Detection System</h1>
+      <div class="header-info">
+        <span id="currentTime"></span>
+      </div>
+    </header>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard" id="livePage">
+      
+      <!-- Upload Section -->
+      <section class="card upload-card">
+        <div class="card-header">
+          <h2><i class="fas fa-upload"></i> Upload Video</h2>
+        </div>
+        <div class="card-body">
+          <div class="upload-zone" id="uploadZone">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Drag & drop video here or click to browse</p>
+            <span class="supported">Supports: MP4, AVI, MOV</span>
+            <input type="file" id="videoInput" accept="video/*" hidden>
+          </div>
+          <div class="file-info" id="fileInfo" style="display:none;">
+            <i class="fas fa-file-video"></i>
+            <span id="fileName"></span>
+            <button class="btn-remove" onclick="removeFile()"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="upload-actions">
+            <button class="btn btn-primary" onclick="upload()" id="uploadBtn" disabled>
+              <i class="fas fa-upload"></i> Upload Video
+            </button>
+            <button class="btn btn-success" onclick="start()" id="startBtn" disabled>
+              <i class="fas fa-play"></i> Start Detection
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Video Feed Section -->
+      <section class="card video-card">
+        <div class="card-header">
+          <h2><i class="fas fa-video"></i> Live Detection Feed</h2>
+          <div class="detection-badge" id="detectionBadge">
+            <span class="badge badge-success">No Threat</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="video-container">
+            <img src="/video" id="videoFeed" alt="Video Feed">
+            <div class="video-overlay" id="videoOverlay">
+              <i class="fas fa-play-circle"></i>
+              <p>Upload and start detection to begin</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stats Section -->
+      <section class="card stats-card">
+        <div class="card-header">
+          <h2><i class="fas fa-chart-bar"></i> Detection Stats</h2>
+        </div>
+        <div class="card-body">
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-icon humans">
+                <i class="fas fa-user"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value" id="humanCount">0</span>
+                <span class="stat-label">Humans Detected</span>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon animals">
+                <i class="fas fa-paw"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value" id="animalCount">0</span>
+                <span class="stat-label">Animals Detected</span>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon alerts">
+                <i class="fas fa-bell"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value" id="alertCount">0</span>
+                <span class="stat-label">Total Alerts</span>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon time">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value" id="runTime">00:00</span>
+                <span class="stat-label">Run Time</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Detection Timeline -->
+      <section class="card timeline-card">
+        <div class="card-header">
+          <h2><i class="fas fa-clock"></i> Human Detection Timeline</h2>
+          <button class="btn btn-small" onclick="clearTimeline()">
+            <i class="fas fa-trash"></i> Clear
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="timeline" id="timeline">
+            <div class="timeline-empty">
+              <i class="fas fa-hourglass-start"></i>
+              <p>No detections yet. Start monitoring to see timeline.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Detection Gallery -->
+      <section class="card gallery-card">
+        <div class="card-header">
+          <h2><i class="fas fa-images"></i> Captured Frames</h2>
+          <div class="header-actions">
+            <span class="frame-count" id="frameCount">0 frames</span>
+            <button class="btn btn-small btn-success" onclick="exportAlertFrames()" id="exportBtn" disabled>
+              <i class="fas fa-download"></i> Export as Zip
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="gallery" id="gallery">
+            <div class="gallery-empty">
+              <i class="fas fa-camera"></i>
+              <p>Poaching alert frames will appear here</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- History Page -->
+    <div class="page-content" id="historyPage" style="display:none;">
+      <div class="history-container">
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-history"></i> Detection History</h2>
+            <div class="history-actions">
+              <button class="btn btn-small" onclick="exportHistory()">
+                <i class="fas fa-download"></i> Export
+              </button>
+              <button class="btn btn-small btn-danger-small" onclick="clearHistory()">
+                <i class="fas fa-trash"></i> Clear All
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="history-list" id="historyList">
+              <div class="history-empty">
+                <i class="fas fa-folder-open"></i>
+                <p>No detection history yet. Complete a detection session to see records here.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Page -->
+    <div class="page-content" id="settingsPage" style="display:none;">
+      <div class="settings-container">
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-cog"></i> Detection Settings</h2>
+          </div>
+          <div class="card-body">
+            <div class="settings-group">
+              <h3><i class="fas fa-sliders-h"></i> Detection Parameters</h3>
+              
+              <div class="setting-item">
+                <div class="setting-info">
+                  <label>Confidence Threshold</label>
+                  <span class="setting-desc">Minimum confidence level for detections (lower = more detections)</span>
+                </div>
+                <div class="setting-control">
+                  <input type="range" id="confidenceSlider" min="10" max="90" value="35" oninput="updateConfidence(this.value)">
+                  <span class="setting-value" id="confidenceValue">35%</span>
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-info">
+                  <label>Detection Model</label>
+                  <span class="setting-desc">Select YOLO model size (larger = more accurate but slower)</span>
+                </div>
+                <div class="setting-control">
+                  <select id="modelSelect" onchange="updateModel(this.value)">
+                    <option value="yolov8n.pt">YOLOv8n (Nano - Fastest)</option>
+                    <option value="yolov8s.pt">YOLOv8s (Small)</option>
+                    <option value="yolov8m.pt" selected>YOLOv8m (Medium)</option>
+                    <option value="yolov8l.pt">YOLOv8l (Large)</option>
+                    <option value="yolov8x.pt">YOLOv8x (Extra Large - Most Accurate)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <h3><i class="fas fa-bell"></i> Alert Settings</h3>
+              
+              <div class="setting-item">
+                <div class="setting-info">
+                  <label>Sound Alerts</label>
+                  <span class="setting-desc">Play alarm sound when human is detected</span>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle">
+                    <input type="checkbox" id="soundToggle" checked onchange="updateSound(this.checked)">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-info">
+                  <label>Visual Alerts</label>
+                  <span class="setting-desc">Show popup modal when human is detected</span>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle">
+                    <input type="checkbox" id="visualToggle" checked onchange="updateVisual(this.checked)">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <h3><i class="fas fa-save"></i> Data Settings</h3>
+              
+              <div class="setting-item">
+                <div class="setting-info">
+                  <label>Auto-save Detections</label>
+                  <span class="setting-desc">Automatically save detection frames to history</span>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle">
+                    <input type="checkbox" id="autoSaveToggle" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-info">
+                  <label>Max Saved Frames</label>
+                  <span class="setting-desc">Maximum number of frames to keep in memory</span>
+                </div>
+                <div class="setting-control">
+                  <select id="maxFramesSelect">
+                    <option value="50">50 frames</option>
+                    <option value="100" selected>100 frames</option>
+                    <option value="200">200 frames</option>
+                    <option value="500">500 frames</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-actions">
+              <button class="btn btn-primary" onclick="saveSettings()">
+                <i class="fas fa-save"></i> Save Settings
+              </button>
+              <button class="btn btn-secondary" onclick="resetSettings()">
+                <i class="fas fa-undo"></i> Reset to Default
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Alert Modal -->
+  <div class="alert-modal" id="alertModal">
+    <div class="alert-content">
+      <i class="fas fa-exclamation-triangle"></i>
+      <h2>POACHING ALERT!</h2>
+      <p>Human detected near wildlife - potential poaching activity!</p>
+      <button class="btn btn-danger" onclick="dismissAlert()">Dismiss Alert</button>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
