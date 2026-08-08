@@ -388,21 +388,6 @@ animal_poaching_system/
 │   └── js/
 │       └── app.js
 │
-├── uploads/
-├── outputs/
-│   ├── captures/
-│   ├── exports/
-│   └── training/
-│
-├── datasets/
-│   ├── images/
-│   │   ├── train/
-│   │   └── val/
-│   ├── labels/
-│   │   ├── train/
-│   │   └── val/
-│   └── data.yaml
-│
 └── docs/
     └── poachguard-dashboard.png
 ```
